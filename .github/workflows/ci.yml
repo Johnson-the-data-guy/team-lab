@@ -1,28 +1,21 @@
-name: ci
+name: ci/cd
 on:
   push:
     branches: [main]
   pull_request:
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: grep -q "^port = " app.conf
-
-  test:
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: grep -q "debug = false" app.conf
-        continue-on-error: true
-      - run: echo "tests done"
-
+      - run:
+          grep -q "^port = " app.conf
+        continue-on-error: false
   deploy:
-    needs: [lint, test]
-    if: github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    needs: check
     steps:
+      - uses: actions/checkout@v4
       - run: cat app.conf
